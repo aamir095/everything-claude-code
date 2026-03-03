@@ -1,87 +1,148 @@
 ---
-description: Fix Go build and vet errors
-agent: go-build-resolver
-subtask: true
+description: Comprehensive Go code review for idiomatic patterns, concurrency safety, error handling, and security. Invokes the go-reviewer agent.
 ---
 
-# Go Build Command
+# Go Code Review
 
-Fix Go build, vet, and compilation errors: $ARGUMENTS
+This command invokes the **go-reviewer** agent for comprehensive Go-specific code review.
 
-## Your Task
+## What This Command Does
 
-1. **Run go build**: `go build ./...`
-2. **Run go vet**: `go vet ./...`
-3. **Fix errors** one by one
-4. **Verify fixes** don't introduce new errors
+1. **Identify Go Changes**: Find modified `.go` files via `git diff`
+2. **Run Static Analysis**: Execute `go vet`, `staticcheck`, and `golangci-lint`
+3. **Security Scan**: Check for SQL injection, command injection, race conditions
+4. **Concurrency Review**: Analyze goroutine safety, channel usage, mutex patterns
+5. **Idiomatic Go Check**: Verify code follows Go conventions and best practices
+6. **Generate Report**: Categorize issues by severity
 
-## Common Go Errors
+## When to Use
 
-### Import Errors
-```
-imported and not used: "package"
-```
-**Fix**: Remove unused import or use `_` prefix
+Use `/go-review` when:
+- After writing or modifying Go code
+- Before committing Go changes
+- Reviewing pull requests with Go code
+- Onboarding to a new Go codebase
+- Learning idiomatic Go patterns
 
-### Type Errors
-```
-cannot use x (type T) as type U
-```
-**Fix**: Add type conversion or fix type definition
+## Review Categories
 
-### Undefined Errors
-```
-undefined: identifier
-```
-**Fix**: Import package, define variable, or fix typo
+### CRITICAL (Must Fix)
+- SQL/Command injection vulnerabilities
+- Race conditions without synchronization
+- Goroutine leaks
+- Hardcoded credentials
+- Unsafe pointer usage
+- Ignored errors in critical paths
 
-### Vet Errors
-```
-printf: call has arguments but no formatting directives
-```
-**Fix**: Add format directive or remove arguments
+### HIGH (Should Fix)
+- Missing error wrapping with context
+- Panic instead of error returns
+- Context not propagated
+- Unbuffered channels causing deadlocks
+- Interface not satisfied errors
+- Missing mutex protection
 
-## Fix Order
+### MEDIUM (Consider)
+- Non-idiomatic code patterns
+- Missing godoc comments on exports
+- Inefficient string concatenation
+- Slice not preallocated
+- Table-driven tests not used
 
-1. **Import errors** - Fix or remove imports
-2. **Type definitions** - Ensure types exist
-3. **Function signatures** - Match parameters
-4. **Vet warnings** - Address static analysis
-
-## Build Commands
+## Automated Checks Run
 
 ```bash
-# Build all packages
-go build ./...
-
-# Build with race detector
-go build -race ./...
-
-# Build for specific OS/arch
-GOOS=linux GOARCH=amd64 go build ./...
-
-# Run go vet
+# Static analysis
 go vet ./...
 
-# Run staticcheck
+# Advanced checks (if installed)
 staticcheck ./...
+golangci-lint run
 
-# Format code
-gofmt -w .
+# Race detection
+go build -race ./...
 
-# Tidy dependencies
-go mod tidy
+# Security vulnerabilities
+govulncheck ./...
 ```
 
-## Verification
+## Example Usage
 
-After fixes:
-```bash
-go build ./...    # Should succeed
-go vet ./...      # Should have no warnings
-go test ./...     # Tests should pass
+```text
+User: /go-review
+
+Agent:
+# Go Code Review Report
+
+## Files Reviewed
+- internal/handler/user.go (modified)
+- internal/service/auth.go (modified)
+
+## Static Analysis Results
+✓ go vet: No issues
+✓ staticcheck: No issues
+
+## Issues Found
+
+[CRITICAL] Race Condition
+File: internal/service/auth.go:45
+Issue: Shared map accessed without synchronization
+```go
+var cache = map[string]*Session{}  // Concurrent access!
+
+func GetSession(id string) *Session {
+    return cache[id]  // Race condition
+}
+```
+Fix: Use sync.RWMutex or sync.Map
+```go
+var (
+    cache   = map[string]*Session{}
+    cacheMu sync.RWMutex
+)
+
+func GetSession(id string) *Session {
+    cacheMu.RLock()
+    defer cacheMu.RUnlock()
+    return cache[id]
+}
 ```
 
----
+[HIGH] Missing Error Context
+File: internal/handler/user.go:28
+Issue: Error returned without context
+```go
+return err  // No context
+```
+Fix: Wrap with context
+```go
+return fmt.Errorf("get user %s: %w", userID, err)
+```
 
-**IMPORTANT**: Fix errors only. No refactoring, no improvements. Get the build green with minimal changes.
+## Summary
+- CRITICAL: 1
+- HIGH: 1
+- MEDIUM: 0
+
+Recommendation: ❌ Block merge until CRITICAL issue is fixed
+```
+
+## Approval Criteria
+
+| Status | Condition |
+|--------|-----------|
+| ✅ Approve | No CRITICAL or HIGH issues |
+| ⚠️ Warning | Only MEDIUM issues (merge with caution) |
+| ❌ Block | CRITICAL or HIGH issues found |
+
+## Integration with Other Commands
+
+- Use `/go-test` first to ensure tests pass
+- Use `/go-build` if build errors occur
+- Use `/go-review` before committing
+- Use `/code-review` for non-Go specific concerns
+
+## Related
+
+- Agent: `agents/go-reviewer.md`
+- Skills: `skills/golang-patterns/`, `skills/golang-testing/`

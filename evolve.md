@@ -1,105 +1,120 @@
----
-description: Generate and run E2E tests with Playwright
-agent: e2e-runner
-subtask: true
----
+# Eval Command
 
-# E2E Command
+Manage eval-driven development workflow.
 
-Generate and run end-to-end tests using Playwright: $ARGUMENTS
+## Usage
 
-## Your Task
+`/eval [define|check|report|list] [feature-name]`
 
-1. **Analyze user flow** to test
-2. **Create test journey** with Playwright
-3. **Run tests** and capture artifacts
-4. **Report results** with screenshots/videos
+## Define Evals
 
-## Test Structure
+`/eval define feature-name`
 
-```typescript
-import { test, expect } from '@playwright/test'
+Create a new eval definition:
 
-test.describe('Feature: [Name]', () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup: Navigate, authenticate, prepare state
-  })
+1. Create `.claude/evals/feature-name.md` with template:
 
-  test('should [expected behavior]', async ({ page }) => {
-    // Arrange: Set up test data
+```markdown
+## EVAL: feature-name
+Created: $(date)
 
-    // Act: Perform user actions
-    await page.click('[data-testid="button"]')
-    await page.fill('[data-testid="input"]', 'value')
+### Capability Evals
+- [ ] [Description of capability 1]
+- [ ] [Description of capability 2]
 
-    // Assert: Verify results
-    await expect(page.locator('[data-testid="result"]')).toBeVisible()
-  })
+### Regression Evals
+- [ ] [Existing behavior 1 still works]
+- [ ] [Existing behavior 2 still works]
 
-  test.afterEach(async ({ page }, testInfo) => {
-    // Capture screenshot on failure
-    if (testInfo.status !== 'passed') {
-      await page.screenshot({ path: `test-results/${testInfo.title}.png` })
-    }
-  })
-})
+### Success Criteria
+- pass@3 > 90% for capability evals
+- pass^3 = 100% for regression evals
 ```
 
-## Best Practices
+2. Prompt user to fill in specific criteria
 
-### Selectors
-- Prefer `data-testid` attributes
-- Avoid CSS classes (they change)
-- Use semantic selectors (roles, labels)
+## Check Evals
 
-### Waits
-- Use Playwright's auto-waiting
-- Avoid `page.waitForTimeout()`
-- Use `expect().toBeVisible()` for assertions
+`/eval check feature-name`
 
-### Test Isolation
-- Each test should be independent
-- Clean up test data after
-- Don't rely on test order
+Run evals for a feature:
 
-## Artifacts to Capture
-
-- Screenshots on failure
-- Videos for debugging
-- Trace files for detailed analysis
-- Network logs if relevant
-
-## Test Categories
-
-1. **Critical User Flows**
-   - Authentication (login, logout, signup)
-   - Core feature happy paths
-   - Payment/checkout flows
-
-2. **Edge Cases**
-   - Network failures
-   - Invalid inputs
-   - Session expiry
-
-3. **Cross-Browser**
-   - Chrome, Firefox, Safari
-   - Mobile viewports
-
-## Report Format
+1. Read eval definition from `.claude/evals/feature-name.md`
+2. For each capability eval:
+   - Attempt to verify criterion
+   - Record PASS/FAIL
+   - Log attempt in `.claude/evals/feature-name.log`
+3. For each regression eval:
+   - Run relevant tests
+   - Compare against baseline
+   - Record PASS/FAIL
+4. Report current status:
 
 ```
-E2E Test Results
+EVAL CHECK: feature-name
+========================
+Capability: X/Y passing
+Regression: X/Y passing
+Status: IN PROGRESS / READY
+```
+
+## Report Evals
+
+`/eval report feature-name`
+
+Generate comprehensive eval report:
+
+```
+EVAL REPORT: feature-name
+=========================
+Generated: $(date)
+
+CAPABILITY EVALS
+----------------
+[eval-1]: PASS (pass@1)
+[eval-2]: PASS (pass@2) - required retry
+[eval-3]: FAIL - see notes
+
+REGRESSION EVALS
+----------------
+[test-1]: PASS
+[test-2]: PASS
+[test-3]: PASS
+
+METRICS
+-------
+Capability pass@1: 67%
+Capability pass@3: 100%
+Regression pass^3: 100%
+
+NOTES
+-----
+[Any issues, edge cases, or observations]
+
+RECOMMENDATION
+--------------
+[SHIP / NEEDS WORK / BLOCKED]
+```
+
+## List Evals
+
+`/eval list`
+
+Show all eval definitions:
+
+```
+EVAL DEFINITIONS
 ================
-✅ Passed: X
-❌ Failed: Y
-⏭️ Skipped: Z
-
-Failed Tests:
-- test-name: Error message
-  Screenshot: path/to/screenshot.png
-  Video: path/to/video.webm
+feature-auth      [3/5 passing] IN PROGRESS
+feature-search    [5/5 passing] READY
+feature-export    [0/4 passing] NOT STARTED
 ```
 
----
+## Arguments
 
-**TIP**: Run with `--headed` flag for debugging: `npx playwright test --headed`
+$ARGUMENTS:
+- `define <name>` - Create new eval definition
+- `check <name>` - Run and check evals
+- `report <name>` - Generate full report
+- `list` - Show all evals
+- `clean` - Remove old eval logs (keeps last 10 runs)

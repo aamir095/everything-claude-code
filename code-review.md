@@ -1,56 +1,79 @@
 ---
-description: Fix build and TypeScript errors with minimal changes
-agent: build-error-resolver
-subtask: true
+description: Start the NanoClaw agent REPL — a persistent, session-aware AI assistant powered by the claude CLI.
 ---
 
-# Build Fix Command
+# Claw Command
 
-Fix build and TypeScript errors with minimal changes: $ARGUMENTS
+Start an interactive AI agent session that persists conversation history to disk and optionally loads ECC skill context.
 
-## Your Task
+## Usage
 
-1. **Run type check**: `npx tsc --noEmit`
-2. **Collect all errors**
-3. **Fix errors one by one** with minimal changes
-4. **Verify each fix** doesn't introduce new errors
-5. **Run final check** to confirm all errors resolved
+```bash
+node scripts/claw.js
+```
 
-## Approach
+Or via npm:
 
-### DO:
-- ✅ Fix type errors with correct types
-- ✅ Add missing imports
-- ✅ Fix syntax errors
-- ✅ Make minimal changes
-- ✅ Preserve existing behavior
-- ✅ Run `tsc --noEmit` after each change
+```bash
+npm run claw
+```
 
-### DON'T:
-- ❌ Refactor code
-- ❌ Add new features
-- ❌ Change architecture
-- ❌ Use `any` type (unless absolutely necessary)
-- ❌ Add `@ts-ignore` comments
-- ❌ Change business logic
+## Environment Variables
 
-## Common Error Fixes
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLAW_SESSION` | `default` | Session name (alphanumeric + hyphens) |
+| `CLAW_SKILLS` | *(empty)* | Comma-separated skill names to load as system context |
 
-| Error | Fix |
-|-------|-----|
-| Type 'X' is not assignable to type 'Y' | Add correct type annotation |
-| Property 'X' does not exist | Add property to interface or fix property name |
-| Cannot find module 'X' | Install package or fix import path |
-| Argument of type 'X' is not assignable | Cast or fix function signature |
-| Object is possibly 'undefined' | Add null check or optional chaining |
+## REPL Commands
 
-## Verification Steps
+Inside the REPL, type these commands directly at the prompt:
 
-After fixes:
-1. `npx tsc --noEmit` - should show 0 errors
-2. `npm run build` - should succeed
-3. `npm test` - tests should still pass
+```
+/clear      Clear current session history
+/history    Print full conversation history
+/sessions   List all saved sessions
+/help       Show available commands
+exit        Quit the REPL
+```
 
+## How It Works
+
+1. Reads `CLAW_SESSION` env var to select a named session (default: `default`)
+2. Loads conversation history from `~/.claude/claw/{session}.md`
+3. Optionally loads ECC skill context from `CLAW_SKILLS` env var
+4. Enters a blocking prompt loop — each user message is sent to `claude -p` with full history
+5. Responses are appended to the session file for persistence across restarts
+
+## Session Storage
+
+Sessions are stored as Markdown files in `~/.claude/claw/`:
+
+```
+~/.claude/claw/default.md
+~/.claude/claw/my-project.md
+```
+
+Each turn is formatted as:
+
+```markdown
+### [2025-01-15T10:30:00.000Z] User
+What does this function do?
 ---
+### [2025-01-15T10:30:05.000Z] Assistant
+This function calculates...
+---
+```
 
-**IMPORTANT**: Focus on fixing errors only. No refactoring, no improvements, no architectural changes. Get the build green with minimal diff.
+## Examples
+
+```bash
+# Start default session
+node scripts/claw.js
+
+# Named session
+CLAW_SESSION=my-project node scripts/claw.js
+
+# With skill context
+CLAW_SKILLS=tdd-workflow,security-review node scripts/claw.js
+```

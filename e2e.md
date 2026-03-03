@@ -1,67 +1,40 @@
----
-description: Save verification state and progress checkpoint
-agent: build
----
+# Code Review
 
-# Checkpoint Command
+Comprehensive security and quality review of uncommitted changes:
 
-Save current verification state and create progress checkpoint: $ARGUMENTS
+1. Get changed files: git diff --name-only HEAD
 
-## Your Task
+2. For each changed file, check for:
 
-Create a snapshot of current progress including:
+**Security Issues (CRITICAL):**
+- Hardcoded credentials, API keys, tokens
+- SQL injection vulnerabilities
+- XSS vulnerabilities  
+- Missing input validation
+- Insecure dependencies
+- Path traversal risks
 
-1. **Tests status** - Which tests pass/fail
-2. **Coverage** - Current coverage metrics
-3. **Build status** - Build succeeds or errors
-4. **Code changes** - Summary of modifications
-5. **Next steps** - What remains to be done
+**Code Quality (HIGH):**
+- Functions > 50 lines
+- Files > 800 lines
+- Nesting depth > 4 levels
+- Missing error handling
+- console.log statements
+- TODO/FIXME comments
+- Missing JSDoc for public APIs
 
-## Checkpoint Format
+**Best Practices (MEDIUM):**
+- Mutation patterns (use immutable instead)
+- Emoji usage in code/comments
+- Missing tests for new code
+- Accessibility issues (a11y)
 
-### Checkpoint: [Timestamp]
+3. Generate report with:
+   - Severity: CRITICAL, HIGH, MEDIUM, LOW
+   - File location and line numbers
+   - Issue description
+   - Suggested fix
 
-**Tests**
-- Total: X
-- Passing: Y
-- Failing: Z
-- Coverage: XX%
+4. Block commit if CRITICAL or HIGH issues found
 
-**Build**
-- Status: ✅ Passing / ❌ Failing
-- Errors: [if any]
-
-**Changes Since Last Checkpoint**
-```
-git diff --stat [last-checkpoint-commit]
-```
-
-**Completed Tasks**
-- [x] Task 1
-- [x] Task 2
-- [ ] Task 3 (in progress)
-
-**Blocking Issues**
-- [Issue description]
-
-**Next Steps**
-1. Step 1
-2. Step 2
-
-## Usage with Verification Loop
-
-Checkpoints integrate with the verification loop:
-
-```
-/plan → implement → /checkpoint → /verify → /checkpoint → implement → ...
-```
-
-Use checkpoints to:
-- Save state before risky changes
-- Track progress through phases
-- Enable rollback if needed
-- Document verification points
-
----
-
-**TIP**: Create checkpoints at natural breakpoints: after each phase, before major refactoring, after fixing critical bugs.
+Never approve code with security vulnerabilities!

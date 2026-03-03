@@ -1,61 +1,172 @@
----
-description: Extract patterns and learnings from current session
-agent: build
----
+# Orchestrate Command
 
-# Learn Command
+Sequential agent workflow for complex tasks.
 
-Extract patterns, learnings, and reusable insights from the current session: $ARGUMENTS
+## Usage
 
-## Your Task
+`/orchestrate [workflow-type] [task-description]`
 
-Analyze the conversation and code changes to extract:
+## Workflow Types
 
-1. **Patterns discovered** - Recurring solutions or approaches
-2. **Best practices applied** - Techniques that worked well
-3. **Mistakes to avoid** - Issues encountered and solutions
-4. **Reusable snippets** - Code patterns worth saving
-
-## Output Format
-
-### Patterns Discovered
-
-**Pattern: [Name]**
-- Context: When to use this pattern
-- Implementation: How to apply it
-- Example: Code snippet
-
-### Best Practices Applied
-
-1. [Practice name]
-   - Why it works
-   - When to apply
-
-### Mistakes to Avoid
-
-1. [Mistake description]
-   - What went wrong
-   - How to prevent it
-
-### Suggested Skill Updates
-
-If patterns are significant, suggest updates to:
-- `skills/coding-standards/SKILL.md`
-- `skills/[domain]/SKILL.md`
-- `rules/[category].md`
-
-## Instinct Format (for continuous-learning-v2)
-
-```json
-{
-  "trigger": "[situation that triggers this learning]",
-  "action": "[what to do]",
-  "confidence": 0.7,
-  "source": "session-extraction",
-  "timestamp": "[ISO timestamp]"
-}
+### feature
+Full feature implementation workflow:
+```
+planner -> tdd-guide -> code-reviewer -> security-reviewer
 ```
 
----
+### bugfix
+Bug investigation and fix workflow:
+```
+planner -> tdd-guide -> code-reviewer
+```
 
-**TIP**: Run `/learn` periodically during long sessions to capture insights before context compaction.
+### refactor
+Safe refactoring workflow:
+```
+architect -> code-reviewer -> tdd-guide
+```
+
+### security
+Security-focused review:
+```
+security-reviewer -> code-reviewer -> architect
+```
+
+## Execution Pattern
+
+For each agent in the workflow:
+
+1. **Invoke agent** with context from previous agent
+2. **Collect output** as structured handoff document
+3. **Pass to next agent** in chain
+4. **Aggregate results** into final report
+
+## Handoff Document Format
+
+Between agents, create handoff document:
+
+```markdown
+## HANDOFF: [previous-agent] -> [next-agent]
+
+### Context
+[Summary of what was done]
+
+### Findings
+[Key discoveries or decisions]
+
+### Files Modified
+[List of files touched]
+
+### Open Questions
+[Unresolved items for next agent]
+
+### Recommendations
+[Suggested next steps]
+```
+
+## Example: Feature Workflow
+
+```
+/orchestrate feature "Add user authentication"
+```
+
+Executes:
+
+1. **Planner Agent**
+   - Analyzes requirements
+   - Creates implementation plan
+   - Identifies dependencies
+   - Output: `HANDOFF: planner -> tdd-guide`
+
+2. **TDD Guide Agent**
+   - Reads planner handoff
+   - Writes tests first
+   - Implements to pass tests
+   - Output: `HANDOFF: tdd-guide -> code-reviewer`
+
+3. **Code Reviewer Agent**
+   - Reviews implementation
+   - Checks for issues
+   - Suggests improvements
+   - Output: `HANDOFF: code-reviewer -> security-reviewer`
+
+4. **Security Reviewer Agent**
+   - Security audit
+   - Vulnerability check
+   - Final approval
+   - Output: Final Report
+
+## Final Report Format
+
+```
+ORCHESTRATION REPORT
+====================
+Workflow: feature
+Task: Add user authentication
+Agents: planner -> tdd-guide -> code-reviewer -> security-reviewer
+
+SUMMARY
+-------
+[One paragraph summary]
+
+AGENT OUTPUTS
+-------------
+Planner: [summary]
+TDD Guide: [summary]
+Code Reviewer: [summary]
+Security Reviewer: [summary]
+
+FILES CHANGED
+-------------
+[List all files modified]
+
+TEST RESULTS
+------------
+[Test pass/fail summary]
+
+SECURITY STATUS
+---------------
+[Security findings]
+
+RECOMMENDATION
+--------------
+[SHIP / NEEDS WORK / BLOCKED]
+```
+
+## Parallel Execution
+
+For independent checks, run agents in parallel:
+
+```markdown
+### Parallel Phase
+Run simultaneously:
+- code-reviewer (quality)
+- security-reviewer (security)
+- architect (design)
+
+### Merge Results
+Combine outputs into single report
+```
+
+## Arguments
+
+$ARGUMENTS:
+- `feature <description>` - Full feature workflow
+- `bugfix <description>` - Bug fix workflow
+- `refactor <description>` - Refactoring workflow
+- `security <description>` - Security review workflow
+- `custom <agents> <description>` - Custom agent sequence
+
+## Custom Workflow Example
+
+```
+/orchestrate custom "architect,tdd-guide,code-reviewer" "Redesign caching layer"
+```
+
+## Tips
+
+1. **Start with planner** for complex features
+2. **Always include code-reviewer** before merge
+3. **Use security-reviewer** for auth/payment/PII
+4. **Keep handoffs concise** - focus on what next agent needs
+5. **Run verification** between agents if needed

@@ -1,89 +1,80 @@
 ---
-description: Run comprehensive security review
-agent: security-reviewer
-subtask: true
+description: Configure your preferred package manager (npm/pnpm/yarn/bun)
+disable-model-invocation: true
 ---
 
-# Security Review Command
+# Package Manager Setup
 
-Conduct a comprehensive security review: $ARGUMENTS
+Configure your preferred package manager for this project or globally.
 
-## Your Task
+## Usage
 
-Analyze the specified code for security vulnerabilities following OWASP guidelines and security best practices.
+```bash
+# Detect current package manager
+node scripts/setup-package-manager.js --detect
 
-## Security Checklist
+# Set global preference
+node scripts/setup-package-manager.js --global pnpm
 
-### OWASP Top 10
+# Set project preference
+node scripts/setup-package-manager.js --project bun
 
-1. **Injection** (SQL, NoSQL, OS command, LDAP)
-   - Check for parameterized queries
-   - Verify input sanitization
-   - Review dynamic query construction
+# List available package managers
+node scripts/setup-package-manager.js --list
+```
 
-2. **Broken Authentication**
-   - Password storage (bcrypt, argon2)
-   - Session management
-   - Multi-factor authentication
-   - Password reset flows
+## Detection Priority
 
-3. **Sensitive Data Exposure**
-   - Encryption at rest and in transit
-   - Proper key management
-   - PII handling
+When determining which package manager to use, the following order is checked:
 
-4. **XML External Entities (XXE)**
-   - Disable DTD processing
-   - Input validation for XML
+1. **Environment variable**: `CLAUDE_PACKAGE_MANAGER`
+2. **Project config**: `.claude/package-manager.json`
+3. **package.json**: `packageManager` field
+4. **Lock file**: Presence of package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lockb
+5. **Global config**: `~/.claude/package-manager.json`
+6. **Fallback**: First available package manager (pnpm > bun > yarn > npm)
 
-5. **Broken Access Control**
-   - Authorization checks on every endpoint
-   - Role-based access control
-   - Resource ownership validation
+## Configuration Files
 
-6. **Security Misconfiguration**
-   - Default credentials removed
-   - Error handling doesn't leak info
-   - Security headers configured
+### Global Configuration
+```json
+// ~/.claude/package-manager.json
+{
+  "packageManager": "pnpm"
+}
+```
 
-7. **Cross-Site Scripting (XSS)**
-   - Output encoding
-   - Content Security Policy
-   - Input sanitization
+### Project Configuration
+```json
+// .claude/package-manager.json
+{
+  "packageManager": "bun"
+}
+```
 
-8. **Insecure Deserialization**
-   - Validate serialized data
-   - Implement integrity checks
+### package.json
+```json
+{
+  "packageManager": "pnpm@8.6.0"
+}
+```
 
-9. **Using Components with Known Vulnerabilities**
-   - Run `npm audit`
-   - Check for outdated dependencies
+## Environment Variable
 
-10. **Insufficient Logging & Monitoring**
-    - Security events logged
-    - No sensitive data in logs
-    - Alerting configured
+Set `CLAUDE_PACKAGE_MANAGER` to override all other detection methods:
 
-### Additional Checks
+```bash
+# Windows (PowerShell)
+$env:CLAUDE_PACKAGE_MANAGER = "pnpm"
 
-- [ ] Secrets in code (API keys, passwords)
-- [ ] Environment variable handling
-- [ ] CORS configuration
-- [ ] Rate limiting
-- [ ] CSRF protection
-- [ ] Secure cookie flags
+# macOS/Linux
+export CLAUDE_PACKAGE_MANAGER=pnpm
+```
 
-## Report Format
+## Run the Detection
 
-### Critical Issues
-[Issues that must be fixed immediately]
+To see current package manager detection results, run:
 
-### High Priority
-[Issues that should be fixed before release]
-
-### Recommendations
-[Security improvements to consider]
-
----
-
-**IMPORTANT**: Security issues are blockers. Do not proceed until critical issues are resolved.
+```bash
+node scripts/setup-package-manager.js --detect
+```

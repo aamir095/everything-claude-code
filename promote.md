@@ -1,49 +1,39 @@
 ---
-description: Create implementation plan with risk assessment
-agent: planner
-subtask: true
+name: projects
+description: List known projects and their instinct statistics
+command: true
 ---
 
-# Plan Command
+# Projects Command
 
-Create a detailed implementation plan for: $ARGUMENTS
+List project registry entries and per-project instinct/observation counts for continuous-learning-v2.
 
-## Your Task
+## Implementation
 
-1. **Restate Requirements** - Clarify what needs to be built
-2. **Identify Risks** - Surface potential issues, blockers, and dependencies
-3. **Create Step Plan** - Break down implementation into phases
-4. **Wait for Confirmation** - MUST receive user approval before proceeding
+Run the instinct CLI using the plugin root path:
 
-## Output Format
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/continuous-learning-v2/scripts/instinct-cli.py" projects
+```
 
-### Requirements Restatement
-[Clear, concise restatement of what will be built]
+Or if `CLAUDE_PLUGIN_ROOT` is not set (manual installation):
 
-### Implementation Phases
-[Phase 1: Description]
-- Step 1.1
-- Step 1.2
-...
+```bash
+python3 ~/.claude/skills/continuous-learning-v2/scripts/instinct-cli.py projects
+```
 
-[Phase 2: Description]
-- Step 2.1
-- Step 2.2
-...
+## Usage
 
-### Dependencies
-[List external dependencies, APIs, services needed]
+```bash
+/projects
+```
 
-### Risks
-- HIGH: [Critical risks that could block implementation]
-- MEDIUM: [Moderate risks to address]
-- LOW: [Minor concerns]
+## What to Do
 
-### Estimated Complexity
-[HIGH/MEDIUM/LOW with time estimates]
-
-**WAITING FOR CONFIRMATION**: Proceed with this plan? (yes/no/modify)
-
----
-
-**CRITICAL**: Do NOT write any code until the user explicitly confirms with "yes", "proceed", or similar affirmative response.
+1. Read `~/.claude/homunculus/projects.json`
+2. For each project, display:
+   - Project name, id, root, remote
+   - Personal and inherited instinct counts
+   - Observation event count
+   - Last seen timestamp
+3. Also display global instinct totals

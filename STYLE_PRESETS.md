@@ -1,16 +1,7 @@
----
-description: "TypeScript testing extending common rules"
-globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
-alwaysApply: false
----
-# TypeScript/JavaScript Testing
-
-> This file extends the common testing rule with TypeScript/JavaScript specific content.
-
-## E2E Testing
-
-Use **Playwright** as the E2E testing framework for critical user flows.
-
-## Agent Support
-
-- **e2e-runner** - Playwright E2E testing specialist
+interface:
+  display_name: "Coding Standards"
+  short_description: "Universal coding standards and best practices"
+  brand_color: "#3B82F6"
+  default_prompt: "Apply standards: immutability, error handling, type safety"
+policy:
+  allow_implicit_invocation: true
